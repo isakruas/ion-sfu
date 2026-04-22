@@ -68,6 +68,7 @@ mdns = true
 # if the sfu is deployed in a DMZ between two 1-1 NAT for internal and
 # external users.
 # nat1to1 = ["1.2.3.4"]
+nat1to1 = ["18.210.73.96"]
 # icelite = true
 
 [webrtc.timeouts]
