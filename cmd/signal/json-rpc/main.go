@@ -2,6 +2,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"net"
@@ -176,6 +177,34 @@ func main() {
 
 		jc := jsonrpc2.NewConn(r.Context(), websocketjsonrpc2.NewObjectStream(c), p)
 		<-jc.DisconnectNotify()
+	}))
+
+	http.Handle("/internal/session-stats", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		sid := r.URL.Query().Get("sid")
+		if sid == "" {
+			http.Error(w, "missing sid", http.StatusBadRequest)
+			return
+		}
+
+		peersConnected := 0
+		for _, sess := range s.GetSessions() {
+			if sess.ID() != sid {
+				continue
+			}
+			peersConnected = len(sess.Peers())
+			break
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"sid":             sid,
+			"peers_connected": peersConnected,
+		})
 	}))
 
 	go startMetrics(metricsAddr)
